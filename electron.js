@@ -1,7 +1,8 @@
 var path = require('path')
-var menubar = require('menubar')
-var BrowserWindow = require('browser-window')
-var ipc = require('ipc')
+var menubar = require('./menubar.js')
+var electron = require('electron')
+var BrowserWindow = electron.BrowserWindow
+var ipc = electron.ipcMain
 
 var icons = {
   connected: path.join(__dirname, 'img', 'IconRed.png'),
@@ -12,7 +13,7 @@ var mb = menubar({
   width: 700,
   height: 300,
   index: 'file://' + path.join(__dirname, 'app.html'),
-  icon: 'file://' + icons.disconnected
+  icon: icons.disconnected
 })
 
 var win
@@ -33,7 +34,7 @@ mb.app.on('open-url', function (e, lnk) {
 })
 
 ipc.on('terminate', function terminate (ev) {
-  mb.app.terminate()
+  mb.app.quit()
 })
 
 ipc.on('resize', function resize (ev, data) {

@@ -1,8 +1,7 @@
 /* global screen */
-var ipc = require('ipc')
-var clipboard = require('clipboard')
-var shell = require('shell')
-var desktopCapturer = require('desktop-capturer')
+var electron = require('electron')
+var ipc = electron.ipcRenderer
+var {clipboard, shell, desktopCapturer} = electron
 
 var domify = require('domify')
 var mdns = require('multicast-dns')()
