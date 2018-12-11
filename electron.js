@@ -13,15 +13,20 @@ var mb = menubar({
   width: 700,
   height: 300,
   index: 'file://' + path.join(__dirname, 'app.html'),
-  icon: icons.disconnected
+  icon: icons.disconnected,
+  tooltip: "screencat",
+  alwaysOnTop: true
 })
 
 var win
 
 mb.app.commandLine.appendSwitch('disable-renderer-backgrounding')
 
-mb.on('ready', function ready () {
+mb.on('ready', function () {
   console.log('ready')
+})
+mb.on('after-create-window', function (){
+  mb.window.webContents.openDevTools()
 })
 
 ipc.on('icon', function (ev, key) {
@@ -33,19 +38,19 @@ mb.app.on('open-url', function (e, lnk) {
   if (mb.window) mb.window.webContents.send('open-url', lnk)
 })
 
-ipc.on('terminate', function terminate (ev) {
+ipc.on('terminate', function (ev) {
   mb.app.quit()
 })
 
-ipc.on('resize', function resize (ev, data) {
+ipc.on('resize', function (ev, data) {
   mb.window.setSize(data.width, data.height)
 })
 
-ipc.on('error', function error (ev, err) {
+ipc.on('error', function (ev, err) {
   console.error(new Error(err.message))
 })
 
-ipc.on('create-window', function (ev, config) {
+ipc.on('create-window', function(ev, config) {
   console.log('create-window', [config])
   mb.app.dock.show()
   win = new BrowserWindow({width: 720, height: 445})

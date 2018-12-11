@@ -32,7 +32,7 @@ mdns.on('response', function (res) {
   })
 })
 
-peerConnection.on('connected', function connected (newPeer, remote) {
+peerConnection.on('connected', function(newPeer, remote) {
   peer = newPeer
 
   if (!remote) {
@@ -44,14 +44,13 @@ peerConnection.on('connected', function connected (newPeer, remote) {
     ui.hide(ui.containers.content)
   }
 
-  peer.on('error', function error (err) {
+  peer.on('error', function (err) {
     ipc.send('icon', 'disconnected')
-    console.error('peer error')
-    console.error(err)
+    console.error('peer error', err)
     ui.containers.content.innerHTML = 'Error connecting! Please Quit. ' + err.message
   })
 
-  peer.on('close', function close () {
+  peer.on('close', function() {
     ipc.send('icon', 'disconnected')
     showChoose()
   })
@@ -97,7 +96,7 @@ ui.buttons.share.addEventListener('click', function (e) {
     ui.show(ui.containers.capturer)
     var id = 0
     sources.forEach(function (source) {
-      var thumb = source.thumbnail.toDataUrl()
+      var thumb = source.thumbnail.toDataURL()
       if (!thumb) return
       var title = source.name.slice(0, 20)
       var item = `<li><a href="#"><img src="${thumb}"><span>${title}</span></a></li>`

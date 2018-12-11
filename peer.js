@@ -1,8 +1,8 @@
 /* global screen, EventSource */
 var zlib = require('zlib')
 var events = require('events')
-var SimplePeer = require('simple-peer')
 var nets = require('nets')
+var SimplePeer = require('simple-peer')
 var getUserMedia = require('./get-user-media.js')()
 
 module.exports = function create () {
@@ -10,8 +10,6 @@ module.exports = function create () {
   // var server = 'http://localhost:5005'
   var remoteConfigUrl = 'https://instant.io/rtcConfig'
   if (process.browser) remoteConfigUrl = 'http://cors.maxogden.com/' + remoteConfigUrl
-
-  var videoSize
 
   var defaultConstraints = {
     audio: false,
@@ -39,9 +37,9 @@ module.exports = function create () {
 
   return pc
 
-  function verifyRoom (room, cb) {
-    // ensure room is still open
-    nets({method: 'POST', uri: server + '/v1/' + room + '/pong', json: {ready: true}}, function response (err, resp, data) {
+  // ensure room is still open
+  function verifyRoom(room, cb) {
+    nets({method: 'POST', uri: server + '/v1/' + room + '/pong', json: {ready: true}}, function(err, resp, data) {
       if (err) return cb(err)
       if (resp.statusCode !== 200) return cb(new Error('Invalid or expired invite code'))
       cb()
@@ -49,19 +47,19 @@ module.exports = function create () {
   }
 
   // get remote webrtc config (ice/stun/turn)
-  function getRemoteConfig (cb) {
-    nets({url: remoteConfigUrl, json: true}, function gotConfig (err, resp, config) {
+  function getRemoteConfig(cb) {
+    nets({url: remoteConfigUrl, json: true}, function(err, resp, config) {
       if (err || resp.statusCode > 299) config = undefined // ignore errors
       cb(null, config)
     })
   }
 
   // try getusermedia and then upload sdp pong. this causes host to ping sdp back
-  function getAudio (cb) {
-    getUserMedia({audio: true, video: false}, function ok (stream) {
+  function getAudio(cb) {
+    getUserMedia({audio: true, video: false}, function(stream) {
       cb(null, stream)
     },
-    function error (err) {
+    function(err) {
       // screenshare even if remote doesnt wanna do audio
       if (err.name === 'PermissionDeniedError' || err.name === 'DevicesNotFoundError') {
         cb()
@@ -71,18 +69,17 @@ module.exports = function create () {
     })
   }
 
-  function remotePeer (config, room, cb) {
+  function remotePeer(config, room, cb) {
     // listen for pings
     var pingsUrl = server + '/v1/' + room + '/pings'
     console.log('getting pings', pingsUrl)
     var events = new EventSource(pingsUrl)
-    events.onmessage = function onMessage (e) {
+    events.onmessage = function(e) {
       console.log('pings onmessage', e.data)
-      var row
+      var row = {}
       try {
         row = JSON.parse(e.data)
       } catch (e) {
-        row = {}
         return cb(new Error('Error connecting. Please start over.'))
       }
 
@@ -90,11 +87,11 @@ module.exports = function create () {
         return
       }
 
-      inflate(row.data, function inflated (err, stringified) {
+      inflate(row.data, function(err, stringified) {
         if (err) return cb(err)
 
         pc.emit('getting-audio')
-        getAudio(function got (err, audioStream) {
+        getAudio(function(err, audioStream) {
           if (err) return handleRTCErr(err, cb)
           var peer = new SimplePeer({ trickle: false, config: config })
           if (audioStream) peer._pc.addStream(audioStream)
@@ -106,14 +103,14 @@ module.exports = function create () {
       events.close()
     }
 
-    events.onerror = function onError (e) {
+    events.onerror = function(e) {
       cb(new Error('Error connecting. Please start over.'))
       events.close()
     }
   }
 
-  function createRoom (cb) {
-    nets({method: 'POST', uri: server + '/v1'}, function response (err, resp, body) {
+  function createRoom(cb) {
+    nets({method: 'POST', uri: server + '/v1'}, function (err, resp, body) {
       if (err) return cb(err)
       var room = JSON.parse(body)
       cb(null, room.name)
@@ -128,7 +125,7 @@ module.exports = function create () {
 
     // listen for pongs
     var events = new EventSource(server + '/v1/' + room + '/pongs')
-    events.onmessage = function onMessage (e) {
+    events.onmessage = function(e) {
       console.log('pongs onmessage', e.data)
       var row
       try {
@@ -144,7 +141,7 @@ module.exports = function create () {
 
       // sdp from other side
       if (row.data) {
-        inflate(row.data, function inflated (err, stringified) {
+        inflate(row.data, function(err, stringified) {
           if (err) {
             return cb(new Error('Error connecting. Please start over.'))
           }
@@ -187,16 +184,18 @@ module.exports = function create () {
   }
 
   function handleSignal (sdp, peer, remote, room, cb) {
-    deflate(sdp, function deflated (err, data) {
+    deflate(sdp, function(err, data) {
       if (err) return cb(err)
 
       // upload sdp
       var uploadURL = server + '/v1/' + room
-      if (remote) uploadURL += '/pong'
-      else uploadURL += '/ping'
+      if (remote) 
+        uploadURL += '/pong'
+      else 
+        uploadURL += '/ping'
 
       console.log('POST', uploadURL)
-      nets({method: 'POST', json: {data: data}, uri: uploadURL}, function response (err, resp, body) {
+      nets({method: 'POST', json: {data: data}, uri: uploadURL}, function(err, resp, body) {
         if (err || resp.statusCode > 299) return cb(err)
         cb(null)
       })
@@ -210,9 +209,12 @@ module.exports = function create () {
     if (remote) {
       window.addEventListener('mouseup', mouseupListener)
       window.addEventListener('keydown', keydownListener)
+      peer.on('close', function cleanup () {
+        window.removeEventListener('mouseup', mouseupListener)
+        window.removeEventListener('keydown', keydownListener)
+      })
     }
-
-    if (!remote) {
+    else {
       peer.on('data', function (data) {
         if (!pc.robot) return
         console.log(data)
@@ -220,11 +222,6 @@ module.exports = function create () {
       })
       return
     }
-
-    peer.on('close', function cleanup () {
-      window.removeEventListener('mouseup', mouseupListener)
-      window.removeEventListener('keydown', keydownListener)
-    })
 
     function mouseupListener (e) {
       var data = getMouseData(e)
@@ -255,11 +252,10 @@ module.exports = function create () {
 
       if (!video) video = document.querySelector('video')
       if (video) {
-        videoSize = video.getBoundingClientRect()
+        var videoSize = video.getBoundingClientRect()
         data.canvasWidth = videoSize.width
         data.canvasHeight = videoSize.height
       }
-
       return data
     }
   }
@@ -285,8 +281,7 @@ module.exports = function create () {
 
   function deflate (data, cb) {
     // sdp is ~2.5k usually, that's too big for a URL, so we zlib deflate it
-    var stringified = JSON.stringify(data)
-    zlib.deflate(stringified, function (err, deflated) {
+    zlib.deflate(JSON.stringify(data), function (err, deflated) {
       if (err) {
         cb(err)
         return

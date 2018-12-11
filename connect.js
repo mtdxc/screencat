@@ -85,13 +85,13 @@ module.exports.host = function (peerConnection, ui, opts) {
   })
 }
 
-function renderStreams (peerConnection, ui, stream) {
-  stream.getAudioTracks().forEach(function each (track) {
+function renderStreams(peerConnection, ui, stream) {
+  stream.getAudioTracks().forEach(function (track) {
     var audio = peerConnection.audioElement(stream)
     ui.containers.multimedia.appendChild(audio)
     ui.hide(ui.containers.multimedia)
   })
-  stream.getVideoTracks().forEach(function each (track) {
+  stream.getVideoTracks().forEach(function (track) {
     var video = peerConnection.videoElement(stream)
     ui.containers.multimedia.appendChild(video)
     ui.hide(ui.containers.multimedia)
