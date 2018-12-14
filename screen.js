@@ -1,4 +1,4 @@
-var ipc = require('ipc')
+var ipc = require('electron').ipcRenderer
 var createPeerConnection = require('./peer.js')
 var ui = require('./ui.js')
 var connect = require('./connect.js')

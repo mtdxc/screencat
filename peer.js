@@ -174,8 +174,7 @@ module.exports = function create () {
 
   function handleRTCErr (err, cb) {
     if (err.name === 'PermissionDeniedError') {
-      console.error('permission denied')
-      console.error(err)
+      console.error('permission denied', err)
       cb(new Error('Screensharing permission denied'))
     } else {
       console.error('Unknown error', err)
@@ -189,9 +188,9 @@ module.exports = function create () {
 
       // upload sdp
       var uploadURL = server + '/v1/' + room
-      if (remote) 
+      if (remote)
         uploadURL += '/pong'
-      else 
+      else
         uploadURL += '/ping'
 
       console.log('POST', uploadURL)
@@ -250,7 +249,8 @@ module.exports = function create () {
       data.clientX = e.clientX
       data.clientY = e.clientY
 
-      if (!video) video = document.querySelector('video')
+      if (!video) 
+        video = document.querySelector('video')
       if (video) {
         var videoSize = video.getBoundingClientRect()
         data.canvasWidth = videoSize.width
